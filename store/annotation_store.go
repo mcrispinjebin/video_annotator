@@ -2,6 +2,9 @@ package store
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"video_annotator/models"
 )
@@ -15,17 +18,45 @@ func NewAnnotationStore(db *gorm.DB) AnnotationStore {
 	return &annotationStore{DB: db}
 }
 
-func (a annotationStore) CreateAnnotationByID(ctx context.Context, annotation *models.Annotation) (err error) {
-	//TODO implement me
-	panic("implement me")
+func (a annotationStore) CreateAnnotation(_ context.Context, annotation *models.Annotation) (err error) {
+	annotation.ID = uuid.New().String()
+	result := a.DB.Create(annotation)
+	if result.Error != nil {
+		err = result.Error
+		return
+	}
+	return nil
 }
 
-func (a annotationStore) UpdateAnnotationByID(ctx context.Context, id string, annotations *models.Annotation) (err error) {
-	//TODO implement me
-	panic("implement me")
+func (a annotationStore) UpdateAnnotation(_ context.Context, annotation *models.Annotation) (err error) {
+	result := a.DB.Updates(annotation)
+	if result.Error != nil {
+		err = result.Error
+		return
+	}
+	return nil
 }
 
-func (a annotationStore) DeleteAnnotationByID(ctx context.Context, id string) (err error) {
-	//TODO implement me
-	panic("implement me")
+func (a annotationStore) DeleteAnnotation(_ context.Context, annotation models.Annotation) (err error) {
+	annotation.Active = false
+	result := a.DB.Save(&annotation)
+	if result.Error != nil {
+		err = result.Error
+		return
+	}
+
+	return nil
+}
+
+func (a annotationStore) GetAnnotation(_ context.Context, annotationID string) (annotation models.Annotation, err error) {
+	result := a.DB.First(&annotation, "id = ?  AND active = ?", annotationID, true)
+	if result.Error != nil {
+		err = result.Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = fmt.Errorf("no annotation is matched with given ID %q", err)
+			return
+		}
+		return
+	}
+	return annotation, nil
 }

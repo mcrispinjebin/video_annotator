@@ -4,23 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"video_annotator/models"
 	"video_annotator/store"
 )
 
 type videoUsecase struct {
-	repoStore store.VideoStore
+	videoStore store.VideoStore
 }
 
 func NewVideoUsecase(store store.Store) VideoUsecase {
-	return videoUsecase{repoStore: store.VideoStore}
+	return videoUsecase{videoStore: store.VideoStore}
 }
 
 func (v videoUsecase) CreateVideo(ctx context.Context, video *models.Video) (err error) {
-	//check source
-
-	videos, err := v.repoStore.GetAllVideos(ctx)
+	videos, err := v.videoStore.GetAllVideos(ctx)
 	if err != nil {
 		return err
 	}
@@ -32,8 +29,7 @@ func (v videoUsecase) CreateVideo(ctx context.Context, video *models.Video) (err
 		}
 	}
 
-	video.ID = uuid.New().String()
-	err = v.repoStore.CreateNewVideo(ctx, video)
+	err = v.videoStore.CreateNewVideo(ctx, video)
 	if err != nil {
 		return err
 	}
@@ -42,7 +38,7 @@ func (v videoUsecase) CreateVideo(ctx context.Context, video *models.Video) (err
 }
 
 func (v videoUsecase) GetVideo(ctx context.Context, videoID string) (video models.Video, err error) {
-	video, err = v.repoStore.GetVideoByID(ctx, videoID)
+	video, err = v.videoStore.GetVideoByID(ctx, videoID, true)
 	if err != nil {
 		return
 	}
@@ -51,13 +47,13 @@ func (v videoUsecase) GetVideo(ctx context.Context, videoID string) (video model
 }
 
 func (v videoUsecase) DeleteVideo(ctx context.Context, videoID string) (err error) {
-	video, err := v.repoStore.GetVideoByID(ctx, videoID)
+	video, err := v.videoStore.GetVideoByID(ctx, videoID, true)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("Video with ID %s is not found to be deleted", videoID))
 		return
 	}
 
-	if err = v.repoStore.DeleteVideo(ctx, video); err != nil {
+	if err = v.videoStore.DeleteVideo(ctx, video); err != nil {
 		return err
 	}
 

@@ -13,8 +13,9 @@ type VideoUsecase interface {
 
 type AnnotationUsecase interface {
 	CreateAnnotation(ctx context.Context, annotation *models.Annotation) (err error)
-	UpdateAnnotation(ctx context.Context, id string, annotations *models.Annotation) (err error)
-	DeleteAnnotation(ctx context.Context, id string) (err error)
+	UpdateAnnotation(ctx context.Context, videoID string,
+		annotationUpdate *models.Annotation) (fetchedAnnotation models.Annotation, err error)
+	DeleteAnnotation(ctx context.Context, videoID, annotationID string) (err error)
 }
 
 type Usecase struct {

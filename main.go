@@ -11,33 +11,23 @@ import (
 	"video_annotator/usecase"
 )
 
-func RootHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Video Annotator service is here"))
-}
-
 func main() {
 	router := mux.NewRouter()
-
-	router.HandleFunc("/", RootHandler)
-	//db := initPostgres()
-	////initDB()
-	//err := db.AutoMigrate(&Video{})
 
 	dsn := "host=localhost user=postgres password=postgres dbname=video_annotation port=5432 sslmode=disable"
 
 	db := store.ConnectPostgresDB(dsn)
-	fmt.Printf("%#v", db)
-	db.AutoMigrate(&models.Video{}, &models.Annotation{})
-	//db.Migrator().CreateConstraint(&Video{}, "Annotation")
-	//db.Migrator().CreateConstraint(&Video{}, "fk_Videos_annotations")
+	if err := db.AutoMigrate(&models.Video{}, &models.Annotation{}); err != nil {
+		log.Fatal(fmt.Sprintf("error in DB migration %q", err.Error()))
+	}
 
-	store := store.Store{
+	repoStore := store.Store{
 		VideoStore:      store.NewVideoStore(db),
 		AnnotationStore: store.NewAnnotationStore(db),
 	}
 
-	videoUsecase := usecase.NewVideoUsecase(store)
-	annotationUsecase := usecase.NewAnnotationUsecase(store)
+	videoUsecase := usecase.NewVideoUsecase(repoStore)
+	annotationUsecase := usecase.NewAnnotationUsecase(repoStore)
 
 	h := handlers.NewHandler(videoUsecase, annotationUsecase)
 
@@ -45,8 +35,7 @@ func main() {
 	router.HandleFunc("/videos/{videoID}", h.DeleteVideo).Methods("DELETE")
 	router.HandleFunc("/videos/{videoID}/annotations", h.GetVideo).Methods("GET")
 
-	router.HandleFunc("/videos/{videoID}/annotations",
-		h.CreateAnnotation).Methods("POST")
+	router.HandleFunc("/videos/{videoID}/annotations", h.CreateAnnotation).Methods("POST")
 	router.HandleFunc("/videos/{videoID}/annotations/{annotationID}",
 		h.UpdateAnnotation).Methods("PATCH")
 	router.HandleFunc("/videos/{videoID}/annotations/{annotationID}",

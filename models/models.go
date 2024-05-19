@@ -4,12 +4,13 @@ import "time"
 
 type Video struct {
 	ID          string       `gorm:"primaryKey" json:"id"`
-	Title       string       `json:"title"`
-	Description string       `json:"description"`
-	DurationSec int          `json:"durationSeconds"`
-	Url         string       `json:"url"`
-	Source      string       `json:"source"`
+	Title       string       `json:"title" validate:"required"`
+	Description string       `json:"description" validate:"required"`
+	DurationSec int          `json:"durationSeconds" validate:"required,gt=0"`
+	Url         string       `json:"url" validate:"required,url"`
+	Source      string       `json:"source" validate:"required"`
 	CreatedAt   time.Time    `json:"createdAt"`
+	Active      bool         `gorm:"default:true" json:"-"`
 	Annotations []Annotation `gorm:"foreignKey:VideoID" json:"annotations"`
 }
 
@@ -20,9 +21,9 @@ type Annotation struct {
 	EndTimeSec      int       `json:"EndTimeSeconds"`
 	Type            string    `json:"Type"`
 	AdditionalNotes string    `json:"AdditionalNotes"`
-	Active          bool      `gorm:"default:true" json:"Active"`
+	Active          bool      `gorm:"default:true" json:"-"`
 	CreatedAt       time.Time `json:"CreatedAt"`
 	UpdatedAt       time.Time `json:"UpdatedAt"`
 
-	Video Video `gorm:"foreignKey:VideoID;references:ID"`
+	Video Video `gorm:"foreignKey:VideoID;references:ID" json:"-"`
 }
