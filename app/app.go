@@ -3,17 +3,36 @@ package app
 import (
 	"fmt"
 	"log"
+	"os"
 	"video_annotator/handlers"
 	"video_annotator/models"
 	"video_annotator/store"
 	"video_annotator/usecase"
 )
 
+func getEnv(key string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		log.Fatal(fmt.Sprintf("env variable %s does not exist", key))
+	}
+	return value
+}
+
 func Start() {
 
-	//add env and defer panic exception codes
+	dsn := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
+		getEnv("DB_USER"),
+		getEnv("DB_PASSWORD"),
+		getEnv("DB_NAME"),
+		getEnv("DB_HOST"),
+		getEnv("DB_PORT"),
+	)
 
-	dsn := "host=postgres user=postgres password=postgres dbname=video_annotation port=5432 sslmode=disable"
+	defer func() {
+		if r := recover(); r != nil {
+			log.Print("panic occurred")
+		}
+	}()
 
 	db := store.ConnectPostgresDB(dsn)
 	if err := db.AutoMigrate(&models.Video{}, &models.Annotation{}); err != nil {
