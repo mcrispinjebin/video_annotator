@@ -1,6 +1,9 @@
 package app
 
-import "net/http"
+import (
+	"net/http"
+	"video_annotator/constants"
+)
 
 // fetch from secrets
 const apiKey = "secret-api-key"
@@ -10,7 +13,7 @@ func WithProtectedAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		key := r.Header.Get("X-API-KEY")
 		if key != apiKey {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			http.Error(w, "Unauthorized", constants.HttpUnauthorised)
 			return
 		}
 		next.ServeHTTP(w, r)
