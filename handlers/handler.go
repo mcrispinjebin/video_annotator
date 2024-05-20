@@ -6,6 +6,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"log"
 	"net/http"
+	"video_annotator/constants"
 	"video_annotator/models"
 	"video_annotator/usecase"
 	"video_annotator/utils"
@@ -35,25 +36,26 @@ func (h *handler) CreateVideo(w http.ResponseWriter, r *http.Request) {
 
 	video := &models.Video{}
 	if err := json.NewDecoder(r.Body).Decode(&video); err != nil {
-		log.Printf("error in parsing json content for video creation %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		cErr := &models.CustomErr{Err: err, Message: constants.VideoCreateJSONDecodeErr,
+			StatusCode: constants.HttpStatusBadRequest}
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	err := validate.Struct(video)
 	if err != nil {
-		log.Printf("error in validating request %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		cErr := &models.CustomErr{Err: err, Message: constants.VideoCreateRequestValidationErr,
+			StatusCode: constants.HttpStatusBadRequest}
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
-	if err := h.VideoUsecase.CreateVideo(ctx, video); err != nil {
-		log.Printf("error occurred in creating video %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusInternalServerError)
+	if cErr := h.VideoUsecase.CreateVideo(ctx, video); cErr != nil {
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
-	utils.ReturnResponse(w, http.StatusOK, video)
+	utils.ReturnResponse(w, constants.HttpStatusOK, video)
 	return
 }
 
@@ -62,19 +64,19 @@ func (h *handler) GetVideo(w http.ResponseWriter, r *http.Request) {
 
 	videoID, err := utils.GetURLParam(r, "videoID")
 	if err != nil {
-		log.Printf("error occurred in creating video %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		cErr := &models.CustomErr{Err: err, Message: constants.VideoGetIDParamErr,
+			StatusCode: constants.HttpStatusBadRequest}
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
-	video, err := h.VideoUsecase.GetVideo(ctx, videoID)
-	if err != nil {
-		log.Printf("error occurred in fetching video  %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusInternalServerError)
+	video, cErr := h.VideoUsecase.GetVideo(ctx, videoID)
+	if cErr != nil {
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
-	utils.ReturnResponse(w, http.StatusOK, video)
+	utils.ReturnResponse(w, constants.HttpStatusOK, video)
 	return
 }
 
@@ -83,19 +85,19 @@ func (h *handler) DeleteVideo(w http.ResponseWriter, r *http.Request) {
 
 	videoID, err := utils.GetURLParam(r, "videoID")
 	if err != nil {
-		log.Printf("error in fetching video ID %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		cErr := &models.CustomErr{Err: err, Message: constants.VideoDeleteIDParamErr,
+			StatusCode: constants.HttpStatusBadRequest}
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
-	err = h.VideoUsecase.DeleteVideo(ctx, videoID)
-	if err != nil {
-		log.Printf("error occurred in deleting video %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusInternalServerError)
+	cErr := h.VideoUsecase.DeleteVideo(ctx, videoID)
+	if cErr != nil {
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
-	utils.ReturnResponse(w, http.StatusNoContent, "")
+	utils.ReturnResponse(w, constants.HttpStatusNoContent, "")
 	return
 }
 
@@ -104,26 +106,27 @@ func (h *handler) CreateAnnotation(w http.ResponseWriter, r *http.Request) {
 
 	videoID, err := utils.GetURLParam(r, "videoID")
 	if err != nil {
-		log.Printf("error in fetching videoID %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		cErr := &models.CustomErr{Err: err, Message: constants.AnnotationCreateURLParamErr,
+			StatusCode: constants.HttpStatusBadRequest}
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
 	annotation := &models.Annotation{}
 	if err := json.NewDecoder(r.Body).Decode(&annotation); err != nil {
-		log.Printf("error in parsing json content for annotation creation %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		cErr := &models.CustomErr{Err: err, Message: constants.AnnotationCreateJSONDecodeErr,
+			StatusCode: constants.HttpStatusBadRequest}
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
 	annotation.VideoID = videoID
-	if err := h.AnnotationUsecase.CreateAnnotation(ctx, annotation); err != nil {
-		log.Printf("error occurred in creating annotation %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusInternalServerError)
+	if cErr := h.AnnotationUsecase.CreateAnnotation(ctx, annotation); cErr != nil {
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
-	utils.ReturnResponse(w, http.StatusOK, annotation)
+	utils.ReturnResponse(w, constants.HttpStatusOK, annotation)
 	return
 }
 
@@ -132,34 +135,37 @@ func (h *handler) UpdateAnnotation(w http.ResponseWriter, r *http.Request) {
 
 	videoID, err := utils.GetURLParam(r, "videoID")
 	if err != nil {
-		log.Printf("error in fetching videoID %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		cErr := &models.CustomErr{Err: err, Message: constants.AnnotationUpdateVideoIDParamErr,
+			StatusCode: constants.HttpStatusBadRequest}
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
 	annotationID, err := utils.GetURLParam(r, "annotationID")
 	if err != nil {
-		log.Printf("error in fetching annotationID %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		cErr := &models.CustomErr{Err: err, Message: constants.AnnotationUpdateAnnotationIDParamErr,
+			StatusCode: constants.HttpStatusBadRequest}
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
 	annotationUpdate := &models.Annotation{}
 	if err := json.NewDecoder(r.Body).Decode(&annotationUpdate); err != nil {
-		log.Printf("error in parsing json content for annotation update %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		cErr := &models.CustomErr{Err: err, Message: constants.AnnotationUpdateDecodeErr,
+			StatusCode: constants.HttpStatusBadRequest}
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
 	annotationUpdate.ID = annotationID
-	updatedAnnotation, err := h.AnnotationUsecase.UpdateAnnotation(ctx, videoID, annotationUpdate)
-	if err != nil {
-		log.Printf("error occurred in updating annotation %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusBadRequest)
+	updatedAnnotation, cErr := h.AnnotationUsecase.UpdateAnnotation(ctx, videoID, annotationUpdate)
+	if cErr != nil {
+		log.Printf("%s - %q", cErr.Message, cErr.Err)
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
-	utils.ReturnResponse(w, http.StatusOK, updatedAnnotation)
+	utils.ReturnResponse(w, constants.HttpStatusOK, updatedAnnotation)
 	return
 }
 
@@ -168,25 +174,26 @@ func (h *handler) DeleteAnnotation(w http.ResponseWriter, r *http.Request) {
 
 	videoID, err := utils.GetURLParam(r, "videoID")
 	if err != nil {
-		log.Printf("error in fetching video ID %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		cErr := &models.CustomErr{Err: err, Message: constants.AnnotationDeleteVideoIDParamErr,
+			StatusCode: constants.HttpStatusBadRequest}
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
 	annotationID, err := utils.GetURLParam(r, "annotationID")
 	if err != nil {
-		log.Printf("error in fetching annotationID %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		cErr := &models.CustomErr{Err: err, Message: constants.AnnotationDeleteAnnotationIDParamErr,
+			StatusCode: constants.HttpStatusBadRequest}
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
-	err = h.AnnotationUsecase.DeleteAnnotation(ctx, videoID, annotationID)
-	if err != nil {
-		log.Printf("error occurred in deleting annotation %q", err.Error())
-		utils.ErrorResponse(w, err.Error(), http.StatusInternalServerError)
+	cErr := h.AnnotationUsecase.DeleteAnnotation(ctx, videoID, annotationID)
+	if cErr != nil {
+		utils.ErrorResponse(w, cErr)
 		return
 	}
 
-	utils.ReturnResponse(w, http.StatusNoContent, "")
+	utils.ReturnResponse(w, constants.HttpStatusNoContent, "")
 	return
 }

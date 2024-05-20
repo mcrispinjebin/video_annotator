@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"fmt"
+	"video_annotator/constants"
 	"video_annotator/models"
 	"video_annotator/store"
 )
@@ -16,7 +16,7 @@ func NewAnnotationUsecase(store store.Store) AnnotationUsecase {
 	return annotationUsecase{VideoStore: store.VideoStore, AnnotationStore: store.AnnotationStore}
 }
 
-func (a annotationUsecase) CreateAnnotation(ctx context.Context, annotation *models.Annotation) (err error) {
+func (a annotationUsecase) CreateAnnotation(ctx context.Context, annotation *models.Annotation) (err *models.CustomErr) {
 	video, err := a.VideoStore.GetVideoByID(ctx, annotation.VideoID, true)
 	if err != nil {
 		return err
@@ -27,6 +27,13 @@ func (a annotationUsecase) CreateAnnotation(ctx context.Context, annotation *mod
 		return err
 	}
 
+	//if create and update validation deviates much, separate validation functions
+	if annotation.Type == "" {
+		err.Message = constants.AnnotationTypeEmptyErr
+		err.StatusCode = constants.HttpStatusBadRequest
+		return err
+	}
+
 	if err = a.AnnotationStore.CreateAnnotation(ctx, annotation); err != nil {
 		return err
 	}
@@ -34,7 +41,7 @@ func (a annotationUsecase) CreateAnnotation(ctx context.Context, annotation *mod
 }
 
 func (a annotationUsecase) UpdateAnnotation(ctx context.Context,
-	videoID string, annotationUpdate *models.Annotation) (fetchedAnnotation models.Annotation, err error) {
+	videoID string, annotationUpdate *models.Annotation) (fetchedAnnotation models.Annotation, err *models.CustomErr) {
 
 	video, err := a.VideoStore.GetVideoByID(ctx, videoID, true)
 	if err != nil {
@@ -43,11 +50,6 @@ func (a annotationUsecase) UpdateAnnotation(ctx context.Context,
 
 	fetchedAnnotation, err = a.AnnotationStore.GetAnnotation(ctx, annotationUpdate.ID)
 	if err != nil {
-		return
-	}
-
-	if fetchedAnnotation.ID == "" {
-		err = fmt.Errorf("annotation ID does not exists for the video")
 		return
 	}
 
@@ -77,24 +79,25 @@ func (a annotationUsecase) UpdateAnnotation(ctx context.Context,
 }
 
 func (a annotationUsecase) validateAnnotationDuration(_ context.Context, annotation *models.Annotation,
-	video *models.Video) (err error) {
+	video *models.Video) (err *models.CustomErr) {
 
 	startTime := annotation.StartTimeSec
 	endTime := annotation.EndTimeSec
 
-	if startTime < 0 || !(startTime < endTime) {
-		//if start time is forced to be > 0, end time will be greater than 0 due to second condition
-		err = fmt.Errorf("duration of annotation is invalid")
+	err.StatusCode = constants.HttpStatusBadRequest
+	if startTime < 0 {
+		err.Message = constants.AnnotationStartTimePositiveErr
+		return err
+	}
+
+	if !(startTime < endTime) {
+		//if start time is forced to be > 0, end time will be greater than 0 due to this condition
+		err.Message = constants.AnnotationEndTimeGreaterToStartTimeErr
 		return err
 	}
 
 	if endTime > video.DurationSec {
-		err = fmt.Errorf("annotation duration exceeds video duration")
-		return err
-	}
-
-	if annotation.Type == "" {
-		err = fmt.Errorf("validation failed for annotation type")
+		err.Message = constants.AnnotationDurationExceedsVideoErr
 		return err
 	}
 
@@ -103,7 +106,7 @@ func (a annotationUsecase) validateAnnotationDuration(_ context.Context, annotat
 			existingAnnotation.EndTimeSec == endTime &&
 			existingAnnotation.Type == annotation.Type &&
 			existingAnnotation.ID != annotation.ID {
-			err = fmt.Errorf("another annotation with same type exists with the same duration")
+			err.Message = constants.AnnotationExistsWithSameDurationErr
 			return err
 		}
 	}
@@ -111,10 +114,9 @@ func (a annotationUsecase) validateAnnotationDuration(_ context.Context, annotat
 	return nil
 }
 
-func (a annotationUsecase) DeleteAnnotation(ctx context.Context, videoID, annotationID string) (err error) {
+func (a annotationUsecase) DeleteAnnotation(ctx context.Context, videoID, annotationID string) (err *models.CustomErr) {
 	_, err = a.VideoStore.GetVideoByID(ctx, videoID, false)
 	if err != nil {
-		err = fmt.Errorf("video does not exist for given ID %q", err.Error())
 		return
 	}
 
@@ -124,7 +126,8 @@ func (a annotationUsecase) DeleteAnnotation(ctx context.Context, videoID, annota
 	}
 
 	if fetchedAnnotation.VideoID != videoID {
-		err = fmt.Errorf("annotation does not exist for the given video ID %q", err.Error())
+		err.Message = constants.AnnotationDoesNotExistForVideoErr
+		err.StatusCode = constants.HttpStatusBadRequest
 		return
 	}
 

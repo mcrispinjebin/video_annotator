@@ -3,9 +3,9 @@ package store
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"video_annotator/constants"
 	"video_annotator/models"
 )
 
@@ -18,44 +18,49 @@ func NewAnnotationStore(db *gorm.DB) AnnotationStore {
 	return &annotationStore{DB: db}
 }
 
-func (a annotationStore) CreateAnnotation(_ context.Context, annotation *models.Annotation) (err error) {
+func (a annotationStore) CreateAnnotation(_ context.Context, annotation *models.Annotation) (err *models.CustomErr) {
 	annotation.ID = uuid.New().String()
 	result := a.DB.Create(annotation)
 	if result.Error != nil {
-		err = result.Error
+		err.Err = result.Error
+		err.Message = constants.AnnotationCreateErr
 		return
 	}
 	return nil
 }
 
-func (a annotationStore) UpdateAnnotation(_ context.Context, annotation *models.Annotation) (err error) {
+func (a annotationStore) UpdateAnnotation(_ context.Context, annotation *models.Annotation) (err *models.CustomErr) {
 	result := a.DB.Updates(annotation)
 	if result.Error != nil {
-		err = result.Error
+		err.Err = result.Error
+		err.Message = constants.AnnotationUpdateErr
 		return
 	}
 	return nil
 }
 
-func (a annotationStore) DeleteAnnotation(_ context.Context, annotation models.Annotation) (err error) {
+func (a annotationStore) DeleteAnnotation(_ context.Context, annotation models.Annotation) (err *models.CustomErr) {
 	annotation.Active = false
 	result := a.DB.Save(&annotation)
 	if result.Error != nil {
-		err = result.Error
+		err.Err = result.Error
+		err.Message = constants.AnnotationDeleteErr
 		return
 	}
 
 	return nil
 }
 
-func (a annotationStore) GetAnnotation(_ context.Context, annotationID string) (annotation models.Annotation, err error) {
+func (a annotationStore) GetAnnotation(_ context.Context, annotationID string) (annotation models.Annotation, err *models.CustomErr) {
 	result := a.DB.First(&annotation, "id = ?  AND active = ?", annotationID, true)
 	if result.Error != nil {
-		err = result.Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err = fmt.Errorf("no annotation is matched with given ID %q", err)
+		err.Err = result.Error
+		if errors.Is(err.Err, gorm.ErrRecordNotFound) {
+			err.StatusCode = constants.HttpResourceNotFound
+			err.Message = constants.AnnotationResourceNotFound
 			return
 		}
+		err.Message = constants.AnnotationResourceNotFound
 		return
 	}
 	return annotation, nil

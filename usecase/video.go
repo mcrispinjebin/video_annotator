@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"video_annotator/constants"
 	"video_annotator/models"
 	"video_annotator/store"
 )
@@ -16,7 +16,7 @@ func NewVideoUsecase(store store.Store) VideoUsecase {
 	return videoUsecase{videoStore: store.VideoStore}
 }
 
-func (v videoUsecase) CreateVideo(ctx context.Context, video *models.Video) (err error) {
+func (v videoUsecase) CreateVideo(ctx context.Context, video *models.Video) (err *models.CustomErr) {
 	videos, err := v.videoStore.GetAllVideos(ctx)
 	if err != nil {
 		return err
@@ -24,7 +24,7 @@ func (v videoUsecase) CreateVideo(ctx context.Context, video *models.Video) (err
 
 	for _, existingVideo := range videos {
 		if existingVideo.Url == video.Url {
-			err = errors.New(fmt.Sprintf("video with Url %s already exists", video.Url))
+			err.Message = fmt.Sprintf(constants.VideoWithSameUrlExistsErr, video.Url)
 			return err
 		}
 	}
@@ -37,7 +37,7 @@ func (v videoUsecase) CreateVideo(ctx context.Context, video *models.Video) (err
 	return
 }
 
-func (v videoUsecase) GetVideo(ctx context.Context, videoID string) (video models.Video, err error) {
+func (v videoUsecase) GetVideo(ctx context.Context, videoID string) (video models.Video, err *models.CustomErr) {
 	video, err = v.videoStore.GetVideoByID(ctx, videoID, true)
 	if err != nil {
 		return
@@ -46,10 +46,9 @@ func (v videoUsecase) GetVideo(ctx context.Context, videoID string) (video model
 	return video, nil
 }
 
-func (v videoUsecase) DeleteVideo(ctx context.Context, videoID string) (err error) {
+func (v videoUsecase) DeleteVideo(ctx context.Context, videoID string) (err *models.CustomErr) {
 	video, err := v.videoStore.GetVideoByID(ctx, videoID, true)
 	if err != nil {
-		err = errors.New(fmt.Sprintf("Video with ID %s is not found to be deleted", videoID))
 		return
 	}
 

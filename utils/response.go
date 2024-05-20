@@ -3,7 +3,10 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
+	"video_annotator/constants"
+	"video_annotator/models"
 )
 
 type errResponse struct {
@@ -18,11 +21,16 @@ func ReturnResponse(w http.ResponseWriter, statusCode int, data interface{}) {
 	_ = en.Encode(data)
 }
 
-func ErrorResponse(w http.ResponseWriter, responseErrorMessage string, statusCode int) {
+func ErrorResponse(w http.ResponseWriter, customErr *models.CustomErr) {
 	w.Header().Set("Content-Type", "application/json")
+	statusCode := customErr.StatusCode
+	if statusCode == 0 {
+		statusCode = constants.HttpInternalServerError
+	}
 	var buf = new(bytes.Buffer)
 	encoder := json.NewEncoder(buf)
-	_ = encoder.Encode(errResponse{Message: responseErrorMessage})
+	log.Printf("%s - %q", customErr.Message, customErr.Err)
+	_ = encoder.Encode(errResponse{Message: customErr.Message})
 	w.WriteHeader(statusCode)
 	_, _ = w.Write(buf.Bytes())
 }
