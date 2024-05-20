@@ -6,6 +6,7 @@ const (
 	HttpStatusBadRequest = http.StatusBadRequest
 	HttpUnauthorised     = http.StatusUnauthorized
 	HttpResourceNotFound = http.StatusNotFound
+	HttpResourceExists   = http.StatusConflict
 
 	HttpInternalServerError = http.StatusInternalServerError
 

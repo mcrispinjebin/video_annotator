@@ -12,8 +12,8 @@ type videoUsecase struct {
 	videoStore store.VideoStore
 }
 
-func NewVideoUsecase(store store.Store) VideoUsecase {
-	return videoUsecase{videoStore: store.VideoStore}
+func NewVideoUsecase(store store.VideoStore) VideoUsecase {
+	return videoUsecase{videoStore: store}
 }
 
 func (v videoUsecase) CreateVideo(ctx context.Context, video *models.Video) (err *models.CustomErr) {
@@ -24,8 +24,8 @@ func (v videoUsecase) CreateVideo(ctx context.Context, video *models.Video) (err
 
 	for _, existingVideo := range videos {
 		if existingVideo.Url == video.Url {
-			err.Message = fmt.Sprintf(constants.VideoWithSameUrlExistsErr, video.Url)
-			return err
+			return &models.CustomErr{Message: fmt.Sprintf(constants.VideoWithSameUrlExistsErr, video.Url),
+				StatusCode: constants.HttpResourceExists}
 		}
 	}
 

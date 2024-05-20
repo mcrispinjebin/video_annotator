@@ -44,7 +44,7 @@ func Start() {
 		AnnotationStore: store.NewAnnotationStore(db),
 	}
 
-	videoUsecase := usecase.NewVideoUsecase(repoStore)
+	videoUsecase := usecase.NewVideoUsecase(repoStore.VideoStore)
 	annotationUsecase := usecase.NewAnnotationUsecase(repoStore)
 
 	h := handlers.NewHandler(videoUsecase, annotationUsecase)

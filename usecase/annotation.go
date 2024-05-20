@@ -107,6 +107,7 @@ func (a annotationUsecase) validateAnnotationDuration(_ context.Context, annotat
 			existingAnnotation.Type == annotation.Type &&
 			existingAnnotation.ID != annotation.ID {
 			err.Message = constants.AnnotationExistsWithSameDurationErr
+			err.StatusCode = constants.HttpResourceExists
 			return err
 		}
 	}

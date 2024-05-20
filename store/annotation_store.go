@@ -22,9 +22,7 @@ func (a annotationStore) CreateAnnotation(_ context.Context, annotation *models.
 	annotation.ID = uuid.New().String()
 	result := a.DB.Create(annotation)
 	if result.Error != nil {
-		err.Err = result.Error
-		err.Message = constants.AnnotationCreateErr
-		return
+		return &models.CustomErr{Err: result.Error, Message: constants.AnnotationCreateErr}
 	}
 	return nil
 }
@@ -32,9 +30,7 @@ func (a annotationStore) CreateAnnotation(_ context.Context, annotation *models.
 func (a annotationStore) UpdateAnnotation(_ context.Context, annotation *models.Annotation) (err *models.CustomErr) {
 	result := a.DB.Updates(annotation)
 	if result.Error != nil {
-		err.Err = result.Error
-		err.Message = constants.AnnotationUpdateErr
-		return
+		return &models.CustomErr{Err: result.Error, Message: constants.AnnotationUpdateErr}
 	}
 	return nil
 }
@@ -43,9 +39,7 @@ func (a annotationStore) DeleteAnnotation(_ context.Context, annotation models.A
 	annotation.Active = false
 	result := a.DB.Save(&annotation)
 	if result.Error != nil {
-		err.Err = result.Error
-		err.Message = constants.AnnotationDeleteErr
-		return
+		return &models.CustomErr{Err: result.Error, Message: constants.AnnotationDeleteErr}
 	}
 
 	return nil
@@ -54,10 +48,11 @@ func (a annotationStore) DeleteAnnotation(_ context.Context, annotation models.A
 func (a annotationStore) GetAnnotation(_ context.Context, annotationID string) (annotation models.Annotation, err *models.CustomErr) {
 	result := a.DB.First(&annotation, "id = ?  AND active = ?", annotationID, true)
 	if result.Error != nil {
-		err.Err = result.Error
+		err = &models.CustomErr{Err: result.Error}
 		if errors.Is(err.Err, gorm.ErrRecordNotFound) {
 			err.StatusCode = constants.HttpResourceNotFound
 			err.Message = constants.AnnotationResourceNotFound
+
 			return
 		}
 		err.Message = constants.AnnotationResourceNotFound
