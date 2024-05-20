@@ -13,7 +13,7 @@ func Start() {
 
 	//add env and defer panic exception codes
 
-	dsn := "host=localhost user=postgres password=postgres dbname=video_annotation port=5432 sslmode=disable"
+	dsn := "host=postgres user=postgres password=postgres dbname=video_annotation port=5432 sslmode=disable"
 
 	db := store.ConnectPostgresDB(dsn)
 	if err := db.AutoMigrate(&models.Video{}, &models.Annotation{}); err != nil {

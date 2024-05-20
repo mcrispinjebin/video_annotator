@@ -12,5 +12,20 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=video_annotation
 
+  app:
+    build: .
+    depends_on:
+      - postgres
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: video_annotation
+      DB_HOST: postgres
+      DB_PORT: 5432
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+
 volumes:
   pgdata:
