@@ -17,8 +17,11 @@ type errResponse struct {
 func ReturnResponse(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	en := json.NewEncoder(w)
-	_ = en.Encode(data)
+	if data != nil {
+		en := json.NewEncoder(w)
+		_ = en.Encode(data)
+	}
+
 }
 
 func ErrorResponse(w http.ResponseWriter, customErr *models.CustomErr) {

@@ -97,7 +97,7 @@ func (h *handler) DeleteVideo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.ReturnResponse(w, constants.HttpStatusNoContent, "")
+	utils.ReturnResponse(w, constants.HttpStatusNoContent, nil)
 	return
 }
 
@@ -113,7 +113,7 @@ func (h *handler) CreateAnnotation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	annotation := &models.Annotation{}
-	if err := json.NewDecoder(r.Body).Decode(&annotation); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&annotation); err != nil {
 		cErr := &models.CustomErr{Err: err, Message: constants.AnnotationCreateJSONDecodeErr,
 			StatusCode: constants.HttpStatusBadRequest}
 		utils.ErrorResponse(w, cErr)
@@ -194,6 +194,6 @@ func (h *handler) DeleteAnnotation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.ReturnResponse(w, constants.HttpStatusNoContent, "")
+	utils.ReturnResponse(w, constants.HttpStatusNoContent, nil)
 	return
 }

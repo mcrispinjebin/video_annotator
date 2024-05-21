@@ -29,7 +29,7 @@ func (v videoStore) CreateNewVideo(_ context.Context, video *models.Video) (err 
 func (v videoStore) GetVideoByID(_ context.Context, videoID string, includeAnnotations bool) (video models.Video, err *models.CustomErr) {
 	tx := v.DB
 	if includeAnnotations {
-		tx = v.DB.Preload("Annotations")
+		tx = v.DB.Preload("Annotations", "active = ?", true)
 	}
 
 	result := tx.First(&video, "id = ? AND active = ?", videoID, true)

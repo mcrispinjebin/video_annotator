@@ -25,7 +25,8 @@ It also supports the creation, updating, and deletion of annotations with specif
 1. Clone the repo in local
 1. Use the command `docker-compose up` to start the service.
 1. Check the successful server initialisation message in docker container logs.
-1. Unzip and use the postman collections file `video_annotator/postman.json`.
+1. Use the postman collections from the file `video_annotator/postman.json`.
+1. Use the api-key `secret-api-key` for API authentication.
 
 ---
 

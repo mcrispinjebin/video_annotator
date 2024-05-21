@@ -29,9 +29,8 @@ func (a annotationUsecase) CreateAnnotation(ctx context.Context, annotation *mod
 
 	//if create and update validation deviates much, separate validation functions
 	if annotation.Type == "" {
-		err.Message = constants.AnnotationTypeEmptyErr
-		err.StatusCode = constants.HttpStatusBadRequest
-		return err
+		return &models.CustomErr{Message: constants.AnnotationTypeEmptyErr,
+			StatusCode: constants.HttpStatusBadRequest}
 	}
 
 	if err = a.AnnotationStore.CreateAnnotation(ctx, annotation); err != nil {
@@ -84,7 +83,7 @@ func (a annotationUsecase) validateAnnotationDuration(_ context.Context, annotat
 	startTime := annotation.StartTimeSec
 	endTime := annotation.EndTimeSec
 
-	err.StatusCode = constants.HttpStatusBadRequest
+	err = &models.CustomErr{StatusCode: constants.HttpStatusBadRequest}
 	if startTime < 0 {
 		err.Message = constants.AnnotationStartTimePositiveErr
 		return err
@@ -127,9 +126,8 @@ func (a annotationUsecase) DeleteAnnotation(ctx context.Context, videoID, annota
 	}
 
 	if fetchedAnnotation.VideoID != videoID {
-		err.Message = constants.AnnotationDoesNotExistForVideoErr
-		err.StatusCode = constants.HttpStatusBadRequest
-		return
+		return &models.CustomErr{Message: constants.AnnotationDoesNotExistForVideoErr,
+			StatusCode: constants.HttpStatusBadRequest}
 	}
 
 	if err = a.AnnotationStore.DeleteAnnotation(ctx, fetchedAnnotation); err != nil {
