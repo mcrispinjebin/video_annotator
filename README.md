@@ -33,8 +33,8 @@ It also supports the creation, updating, and deletion of annotations with specif
 
 ### Assumptions ###
 1. Videos with same URL cannot be created.
-1. Annotations can exists only with a video.
-1. Annotations can overlap with another annotation for a video but cannot exists with another having the same duration.
+1. Annotations can exist only with a video.
+1. Annotations can overlap with another annotation for a video but cannot exist with another having the same duration.
 
 ---
 
