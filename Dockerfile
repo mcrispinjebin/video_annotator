@@ -1,4 +1,4 @@
-FROM golang:1.21
+FROM golang:1.20
 
 WORKDIR /app
 #
@@ -9,7 +9,9 @@ RUN go mod download
 
 COPY . .
 
-RUN mkdir /go/logs && CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -o main -mod vendor
+RUN go mod vendor
+
+RUN mkdir /go/logs && CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -o main
 
 
 # Expose 8080
